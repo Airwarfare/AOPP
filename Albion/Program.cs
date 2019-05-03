@@ -3,6 +3,7 @@ using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -20,8 +21,10 @@ namespace Albion
 
         static void Main(string[] args)
         {
-
-            
+            List<TestClass> testClasses = JsonConvert.DeserializeObject<List<TestClass>>(File.ReadAllText(@"C:\Users\Jordan\source\repos\Albion\Albion\test.json"));
+            Dictionary<string, TestClass> valuePairs = testClasses.ToDictionary(x => x.Index, x => x);
+            Console.WriteLine(valuePairs["0004"].UniqueName);
+            /*
             IList<LivePacketDevice> devices = LivePacketDevice.AllLocalMachine;
 
             if(devices.Count == 0)
@@ -35,7 +38,7 @@ namespace Albion
             using(PacketCommunicator communicator = selectedDevice.Open(65536, PacketDeviceOpenAttributes.DataTransferUdpRemote, 10000))
             {
                 communicator.ReceivePackets(0, PacketHandler); //Recieve packets on interface
-            }
+            }*/
         }
 
         private static void PacketHandler(Packet packet)
@@ -43,7 +46,7 @@ namespace Albion
             try
             {
                 string ip = packet.Ethernet.IpV4.Source.ToString();
-                if (IPs.Contains(ip)) //Find more generic way to get the server ip's to parse from
+                if (Regex.Match(ip, @"(185\.218\.131\..{2})").Success) //Use regex to match the ip's
                 {
                     Parser.PacketParse(packet.Buffer);
                 }
@@ -56,5 +59,9 @@ namespace Albion
         
     }
 
-    
+    class TestClass
+    {
+        public string Index { get; set; }
+        public string UniqueName { get; set; }
+    }
 }
