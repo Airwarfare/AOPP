@@ -20,12 +20,13 @@ namespace Albion
         };
 
         public static List<PhotonCommand> photonCommands = new List<PhotonCommand>();
+        public static Dictionary<string, TestClass> valuePairs = new Dictionary<string, TestClass>();
 
         static void Main(string[] args)
         {
             List<TestClass> testClasses = JsonConvert.DeserializeObject<List<TestClass>>(File.ReadAllText(@"C:\Users\Jordan\source\repos\Albion\Albion\test.json"));
-            Dictionary<string, TestClass> valuePairs = testClasses.ToDictionary(x => x.Index, x => x);
-            Console.WriteLine(valuePairs["0004"].UniqueName);
+            valuePairs = testClasses.ToDictionary(x => x.Index, x => x);
+            
             
             IList<LivePacketDevice> devices = LivePacketDevice.AllLocalMachine;
 
@@ -78,6 +79,7 @@ namespace Albion
                         command.debug = Parser.ByteArrayToString(command.Data);
 
 
+                        
                         if ((CommandTypes)(command.Type & 0xff) == CommandTypes.SendReliableType)
                         {
                             commands[i] = command;

@@ -73,8 +73,18 @@ namespace Albion
 
 
             string test = Parser.TrimNonAscii(System.Text.Encoding.UTF8.GetString(command.Data));
+                
             if (message.Data[1] == 78 && message.Data[3] == 105)
-                Console.WriteLine("ChacterZoneSwitch");
+            {
+                string t = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(73, (int)message.Data.ReadByte(72)));
+                Console.WriteLine(Program.valuePairs[t].UniqueName);
+                return;
+            }
+            if(message.Data[3] == 105 && message.Data[9] == 115 && message.Data[8] == 1)
+            {
+                string t = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(12, (int)message.Data.ReadByte(11)));
+                Console.WriteLine("Player: " + t);
+            }
         }
 
         public static void ParseSendReliableFragmentType(PhotonCommand command)
