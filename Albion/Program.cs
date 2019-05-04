@@ -76,6 +76,21 @@ namespace Albion
 
                         command.Data = packet.Buffer.ReadBytes(ref offset, command.Length - 12);
                         command.debug = Parser.ByteArrayToString(command.Data);
+
+                        
+                        if((CommandTypes)(command.Type & 0xff) == CommandTypes.SendReliableType)
+                        {
+                            commands[i] = command;
+                            Parser.ParseSendReliableType(command);
+                            continue;
+                        }
+                        if((CommandTypes)(command.Type & 0xff) == CommandTypes.SendReliableFragmentType)
+                        {
+                            commands[i] = command;
+                            //if()
+                            Parser.ParseSendReliableFragmentType(command);
+                            continue;
+                        }
                         
                         commands[i] = command;
                         
@@ -128,5 +143,54 @@ namespace Albion
         public byte[] Data { get; set; }
 
         public string debug { get; set; }
+    }
+
+    struct PhotonReliableMessage
+    {
+        public byte Signature { get; set; }
+        public byte Type { get; set; }
+        public byte OperationCode { get; set; }
+        public byte EventCode { get; set; }
+        public UInt16 OperationResponseCode { get; set; }
+        public byte OperationDebugByte { get; set; }
+        public Int16 ParamaterCount { get; set; }
+        public byte[] Data { get; set; }
+    }
+
+    enum CommandTypes
+    {
+        AcknowledgeType = 1,
+        ConnectType = 2,
+        VerifyConnectType = 3,
+        DisconnectType = 4,
+        PingType = 5,
+        SendReliableType = 6,
+        SendUnreliableType = 7,
+        SendReliableFragmentType = 8,
+        OperationRequest = 2,
+        otherOperationResponse = 3,
+        EventDataType = 4,
+        OperationResponse = 7
+    }
+
+    struct PhotonReliableFragment
+    {
+        public Int32 SequenceNumber { get; set; }
+        public Int32 FragmentCount { get; set; }
+        public Int32 FragmentNumber { get; set; }
+        public Int32 TotalLength { get; set; }
+        public Int32 FragmentOffset { get; set; }
+
+        public byte[] Data { get; set; }
+    }
+}
+
+public static class X
+{
+    public int ReadInt(this byte[] ob, ref int offset, Endianity endianity)
+    {
+        int a = ob.ReadInt(offset, endianity);
+        offset += 4;
+        return a;
     }
 }

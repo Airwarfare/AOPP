@@ -41,6 +41,46 @@ namespace Albion
 
         }
 
+        //Parse Send Reliable Type from Photon Protocol
+        public static void ParseSendReliableType(PhotonCommand command)
+        {
+            int offset = 0;
+            PhotonReliableMessage message = new PhotonReliableMessage();
+            message.Signature = command.Data.ReadByte(ref offset);
+            message.Type = command.Data.ReadByte(ref offset);
+
+            switch ((CommandTypes)(message.Type & 0xff))
+            {
+                case CommandTypes.OperationRequest:
+                    message.OperationCode = command.Data.ReadByte(ref offset);
+                    break;
+                case CommandTypes.EventDataType:
+                    message.EventCode = command.Data.ReadByte(ref offset);
+                    break;
+                case CommandTypes.OperationResponse:
+                case CommandTypes.otherOperationResponse:
+                    message.OperationCode = command.Data.ReadByte(ref offset);
+                    message.OperationResponseCode = command.Data.ReadUShort(ref offset, Endianity.Big);
+                    message.OperationDebugByte = command.Data.ReadByte(ref offset);
+                    break;
+            }
+        }
+
+        public static void ParseSendReliableFragmentType(PhotonCommand command)
+        {
+            int offset = 0;
+            PhotonReliableFragment fragment = new PhotonReliableFragment();
+            fragment.SequenceNumber = command.Data.ReadInt(ref offset, Endianity.Big);
+            fragment.FragmentCount = command.Data.ReadInt(ref offset, Endianity.Big);
+            fragment.FragmentNumber = command.Data.ReadInt(ref offset, Endianity.Big);
+            fragment.TotalLength = command.Data.ReadInt(ref offset, Endianity.Big);
+            fragment.FragmentOffset = command.Data.ReadInt(ref offset, Endianity.Big);
+
+            fragment.Data = command.Data.ReadBytes(offset, command.Data.Length - (4 * 5));
+
+            Console.WriteLine("FRAGMENT");
+        }
+
         public static string TrimNonAscii(string value)
         {
             string pattern = "[^ -~]+";
