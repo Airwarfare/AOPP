@@ -49,21 +49,32 @@ namespace Albion
             message.Signature = command.Data.ReadByte(ref offset);
             message.Type = command.Data.ReadByte(ref offset);
 
+            
+
             switch ((CommandTypes)(message.Type & 0xff))
             {
                 case CommandTypes.OperationRequest:
                     message.OperationCode = command.Data.ReadByte(ref offset);
+                    message.Data = command.Data.ReadBytes(ref offset, command.Data.Length - 3);
                     break;
                 case CommandTypes.EventDataType:
                     message.EventCode = command.Data.ReadByte(ref offset);
+                    message.Data = command.Data.ReadBytes(ref offset, command.Data.Length - 3);
                     break;
                 case CommandTypes.OperationResponse:
                 case CommandTypes.otherOperationResponse:
                     message.OperationCode = command.Data.ReadByte(ref offset);
                     message.OperationResponseCode = command.Data.ReadUShort(ref offset, Endianity.Big);
                     message.OperationDebugByte = command.Data.ReadByte(ref offset);
+                    message.Data = command.Data.ReadBytes(ref offset, command.Data.Length - 6);
                     break;
             }
+
+
+
+            string test = Parser.TrimNonAscii(System.Text.Encoding.UTF8.GetString(command.Data));
+            if (message.Data[1] == 78 && message.Data[3] == 105)
+                Console.WriteLine("ChacterZoneSwitch");
         }
 
         public static void ParseSendReliableFragmentType(PhotonCommand command)
@@ -76,9 +87,17 @@ namespace Albion
             fragment.TotalLength = command.Data.ReadInt(ref offset, Endianity.Big);
             fragment.FragmentOffset = command.Data.ReadInt(ref offset, Endianity.Big);
 
-            fragment.Data = command.Data.ReadBytes(offset, command.Data.Length - (4 * 5));
+            fragment.Data = command.Data.ReadBytes(ref offset, command.Data.Length - (4 * 5));
+            string test = Parser.TrimNonAscii(System.Text.Encoding.UTF8.GetString(fragment.Data));
+            List<string> Hex = new List<string>();
+            foreach (var k in fragment.Data)
+                Hex.Add(string.Format("{0:x2}", k));
 
-            Console.WriteLine("FRAGMENT");
+            //Testing Op Codes
+            if (fragment.Data[7] == 2 && fragment.Data[9] == 121)
+                Console.WriteLine("Marketplace"); 
+            else if (fragment.Data[7] == 18 && fragment.Data[9] == 115)
+                Console.WriteLine("Guild");
         }
 
         public static string TrimNonAscii(string value)

@@ -53,8 +53,8 @@ namespace Albion
                     PhotonLayer photon = new PhotonLayer();
                     int offset = 42;
                     photon.PeerID = packet.Buffer.ReadUShort(ref offset, Endianity.Big);
-                    photon.CrcEnabled = unchecked((sbyte)packet.Buffer.ReadByte(ref offset));
-                    photon.CommandCount = unchecked((sbyte)packet.Buffer.ReadByte(ref offset));
+                    photon.CrcEnabled = packet.Buffer.ReadByte(ref offset);
+                    photon.CommandCount = packet.Buffer.ReadByte(ref offset);
                     photon.Timestamp = packet.Buffer.ReadUInt(ref offset, Endianity.Big);
                     photon.Challenge = packet.Buffer.ReadInt(offset, Endianity.Big);
                     offset += 4;
@@ -65,10 +65,10 @@ namespace Albion
                     {
                         PhotonCommand command = new PhotonCommand();
 
-                        command.Type = unchecked((sbyte)packet.Buffer.ReadByte(ref offset));
-                        command.ChannelID = unchecked((sbyte)packet.Buffer.ReadByte(ref offset));
-                        command.Flags = unchecked((sbyte)packet.Buffer.ReadByte(ref offset));
-                        command.ReservedByte = unchecked((sbyte)packet.Buffer.ReadByte(ref offset));
+                        command.Type = packet.Buffer.ReadByte(ref offset);
+                        command.ChannelID = packet.Buffer.ReadByte(ref offset);
+                        command.Flags = packet.Buffer.ReadByte(ref offset);
+                        command.ReservedByte = packet.Buffer.ReadByte(ref offset);
                         command.Length = packet.Buffer.ReadInt(offset, Endianity.Big);
                         offset += 4;
                         command.ReliableSequenceNumber = packet.Buffer.ReadInt(offset, Endianity.Big);
@@ -77,8 +77,8 @@ namespace Albion
                         command.Data = packet.Buffer.ReadBytes(ref offset, command.Length - 12);
                         command.debug = Parser.ByteArrayToString(command.Data);
 
-                        
-                        if((CommandTypes)(command.Type & 0xff) == CommandTypes.SendReliableType)
+
+                        if ((CommandTypes)(command.Type & 0xff) == CommandTypes.SendReliableType)
                         {
                             commands[i] = command;
                             Parser.ParseSendReliableType(command);
@@ -87,10 +87,12 @@ namespace Albion
                         if((CommandTypes)(command.Type & 0xff) == CommandTypes.SendReliableFragmentType)
                         {
                             commands[i] = command;
-                            //if()
-                            Parser.ParseSendReliableFragmentType(command);
+                            //string test = Parser.TrimNonAscii(System.Text.Encoding.UTF8.GetString(command.Data));
+                            //if (test.Contains("UnitPriceSilver"))
+                                Parser.ParseSendReliableFragmentType(command);
                             continue;
                         }
+                        
                         
                         commands[i] = command;
                         
@@ -118,8 +120,8 @@ namespace Albion
     struct PhotonLayer
     {
         public UInt16 PeerID { get; set; }
-        public sbyte CrcEnabled { get; set; } //Uint8 = sbyte
-        public sbyte CommandCount { get; set; }
+        public byte CrcEnabled { get; set; } //Uint8 = sbyte
+        public byte CommandCount { get; set; }
         public UInt32 Timestamp { get; set; }
         public Int32 Challenge { get; set; }
 
@@ -133,10 +135,10 @@ namespace Albion
 
     struct PhotonCommand
     {
-        public sbyte Type { get; set; }
-        public sbyte ChannelID { get; set; }
-        public sbyte Flags { get; set; }
-        public sbyte ReservedByte { get; set; }
+        public byte Type { get; set; }
+        public byte ChannelID { get; set; }
+        public byte Flags { get; set; }
+        public byte ReservedByte { get; set; }
         public Int32 Length { get; set; }
         public Int32 ReliableSequenceNumber { get; set; }
 
@@ -187,7 +189,7 @@ namespace Albion
 
 public static class X
 {
-    public int ReadInt(this byte[] ob, ref int offset, Endianity endianity)
+    public static int ReadInt(this byte[] ob, ref int offset, Endianity endianity)
     {
         int a = ob.ReadInt(offset, endianity);
         offset += 4;
