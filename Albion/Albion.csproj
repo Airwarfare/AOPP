@@ -134,11 +134,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cache.cs" />
     <Compile Include="MarketplaceOrder.cs" />
     <Compile Include="Parser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Upload.cs" />
+    <Compile Include="User.cs" />
+    <Compile Include="WorldStructs.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

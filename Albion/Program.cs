@@ -13,20 +13,11 @@ namespace Albion
 {
     class Program
     {
-        static List<string> IPs = new List<string> //Automatically get ips later
-        {
-            "185.218.131.87",
-            "185.218.131.75"
-        };
-
-        public static List<PhotonCommand> photonCommands = new List<PhotonCommand>();
-        public static Dictionary<string, TestClass> valuePairs = new Dictionary<string, TestClass>();
+        public static Dictionary<string, Cluster> valuePairs = new Dictionary<string, Cluster>();
 
         static void Main(string[] args)
         {
-            List<TestClass> testClasses = JsonConvert.DeserializeObject<List<TestClass>>(File.ReadAllText(@"C:\Users\Jordan\source\repos\Albion\Albion\test.json"));
-            valuePairs = testClasses.ToDictionary(x => x.Index, x => x);
-            
+            valuePairs = JsonConvert.DeserializeObject<List<Cluster>>(File.ReadAllText(@"C:\Users\Jordan\source\repos\XMLParse\XMLParse\world.json")).ToDictionary(x => x.ID, x => x);
             
             IList<LivePacketDevice> devices = LivePacketDevice.AllLocalMachine;
 
@@ -100,7 +91,7 @@ namespace Albion
                         
                     }
 
-                    photonCommands.AddRange(commands);
+                    //photonCommands.AddRange(commands);
                     //packet.Buffer
                     //Parser.PacketParse(packet.Buffer);
                 }

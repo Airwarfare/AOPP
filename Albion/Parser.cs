@@ -77,13 +77,72 @@ namespace Albion
             if (message.Data[1] == 78 && message.Data[3] == 105)
             {
                 string t = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(73, (int)message.Data.ReadByte(72)));
-                Console.WriteLine(Program.valuePairs[t].UniqueName);
+                if (Program.valuePairs.ContainsKey(t))
+                {
+                    User.Location = Program.valuePairs[t];
+                    Console.WriteLine(Program.valuePairs[t].Name);
+                } else
+                {
+                    User.Location = new Cluster();
+                }
                 return;
             }
             if(message.Data[3] == 105 && message.Data[9] == 115 && message.Data[8] == 1)
             {
-                string t = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(12, (int)message.Data.ReadByte(11)));
-                Console.WriteLine("Player: " + t);
+                if (User.Location.Equals(default(Cluster)))
+                    return;
+                if (!(User.Location.Type != ZoneType.OPENPVP_BLACK_1) ||
+                    !(User.Location.Type != ZoneType.OPENPVP_BLACK_2) ||
+                    !(User.Location.Type != ZoneType.OPENPVP_BLACK_3) ||
+                    !(User.Location.Type != ZoneType.OPENPVP_RED) ||
+                    !(User.Location.Type != ZoneType.OPENPVP_T5RED) ||
+                    !(User.Location.Type != ZoneType.OPENPVP_YELLOW))
+                {               
+                    int l = (int)message.Data.ReadByte(11);
+                    string t = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(12, l));
+                
+                
+                    int goffset = 0;
+                    for (int i = 11 + l; i < message.Data.Length; i++)
+                    {
+                        if(message.Data[i] == 16)
+                        {
+                            goffset = i;
+                            break;
+                        }
+                    }
+                    int tint = (int)message.Data.ReadByte(goffset);
+                    int index = goffset + tint + 1;
+                    string guild = "";
+                    int namelength = 0;
+                    if (message.Data[index] == 8 && message.Data[index + 1] == 115) {
+                        namelength = (int)(message.Data.ReadByte(index + 3));
+                        guild = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(index + 4, namelength));
+                    }
+
+                    int aoffset = 0;
+                    for (int i = index + namelength + 4; i < message.Data.Length; i++)
+                    {
+                        if (message.Data.Length - 1 == i)
+                            break;
+                        if (message.Data[i] == 1 && message.Data[i + 1] == 115)
+                            break;
+                        if (message.Data[i] == 43 && message.Data[i + 1] == 115)
+                        {
+                            aoffset = i;
+                            break;
+                        }
+                    }
+                    string alliance = "";
+                    if(aoffset != 0)
+                    {
+                        int alength = (int)(message.Data.ReadByte(aoffset + 3));
+                        alliance = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(aoffset + 4, alength));
+                    }
+                    Console.WriteLine("Player: " + t + ", Guild: " + guild + ", Alliance: " + alliance);
+                }
+                else
+                    return;
             }
         }
 
