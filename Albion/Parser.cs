@@ -12,45 +12,19 @@ namespace Albion
     static class Parser
     {
         static string packetstring = ""; //Holding Values as the data comes in
-        static bool packetrecieve = false; 
-        public static void PacketParse(byte[] packet)
-        {
-            string test = ByteArrayToString(packet);
-            string[] bytes = Enumerable.Range(0, test.Length).Where(x => x % 2 == 0).Select(x => test.Substring(x, 2)).ToArray(); //split in twos, shorthand for bytes
-            if (bytes.Length > 95)
-            {
-                if (bytes[91] == "2a" && bytes[93] == "03" && packetrecieve == false) //Start Condidtion
-                {
-                    packetstring += System.Text.Encoding.UTF8.GetString(packet.Subsegment(101, packet.Length - 101).ToArray()); //Offset array
-                    packetrecieve = true;
-                }
-                else if (packet.Length != 1242 && packetrecieve == true) //End Packet
-                {
-                    packetstring += System.Text.Encoding.UTF8.GetString(packet.Subsegment(84, packet.Length - 89).ToArray()); //Offset array
-                    packetstring = TrimNonAscii(packetstring);
-                    packetstring = packetstring.Remove(packetstring.Length - 1, 1);
-                    packetrecieve = false;
-
-                    Task.Run(() => PacketToJsonToDictionary());//Convert to json then to the dictionary for uploading
-                }
-                else if (packetrecieve) //Middle Packet
-                {
-                    packetstring += System.Text.Encoding.UTF8.GetString(packet.Subsegment(86, packet.Length - 86).ToArray()); //Offset array
-                }
-            }
-
-        }
+        
 
         //Parse Send Reliable Type from Photon Protocol
         public static void ParseSendReliableType(PhotonCommand command)
         {
+            //Super long method, need to refactor this
             int offset = 0;
             PhotonReliableMessage message = new PhotonReliableMessage();
             message.Signature = command.Data.ReadByte(ref offset);
             message.Type = command.Data.ReadByte(ref offset);
 
             
-
+            //Get the command type
             switch ((CommandTypes)(message.Type & 0xff))
             {
                 case CommandTypes.OperationRequest:
@@ -70,10 +44,7 @@ namespace Albion
                     break;
             }
 
-
-
-            string test = Parser.TrimNonAscii(System.Text.Encoding.UTF8.GetString(command.Data));
-                
+             //Check if we changed zones, update the zone reference
             if (message.Data[1] == 78 && message.Data[3] == 105)
             {
                 string t = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(73, (int)message.Data.ReadByte(72)));
@@ -87,6 +58,7 @@ namespace Albion
                 }
                 return;
             }
+            //Check if a player is being init (meaning they are about to appear on screen i.e player is found)
             if(message.Data[3] == 105 && message.Data[9] == 115 && message.Data[8] == 1)
             {
                 if (User.Location.Equals(default(Cluster)))
@@ -97,7 +69,8 @@ namespace Albion
                     !(User.Location.Type != ZoneType.OPENPVP_RED) ||
                     !(User.Location.Type != ZoneType.OPENPVP_T5RED) ||
                     !(User.Location.Type != ZoneType.OPENPVP_YELLOW))
-                {               
+                {            
+                    //WARNING messy code below, still need to tidy up, still debuging a lot of this, but it is somehow working atm
                     int l = (int)message.Data.ReadByte(11);
                     string t = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(12, l));
                 
@@ -148,6 +121,7 @@ namespace Albion
 
         public static void ParseSendReliableFragmentType(PhotonCommand command)
         {
+            //Get packet info
             int offset = 0;
             PhotonReliableFragment fragment = new PhotonReliableFragment();
             fragment.SequenceNumber = command.Data.ReadInt(ref offset, Endianity.Big);
@@ -156,13 +130,13 @@ namespace Albion
             fragment.TotalLength = command.Data.ReadInt(ref offset, Endianity.Big);
             fragment.FragmentOffset = command.Data.ReadInt(ref offset, Endianity.Big);
 
-            fragment.Data = command.Data.ReadBytes(ref offset, command.Data.Length - (4 * 5));
-            string test = Parser.TrimNonAscii(System.Text.Encoding.UTF8.GetString(fragment.Data));
+            fragment.Data = command.Data.ReadBytes(ref offset, command.Data.Length - (4 * 5)); //Get data
+            string test = Parser.TrimNonAscii(System.Text.Encoding.UTF8.GetString(fragment.Data)); //Keep for debug REMOVE LATER
             List<string> Hex = new List<string>();
             foreach (var k in fragment.Data)
                 Hex.Add(string.Format("{0:x2}", k));
 
-            //Testing Op Codes
+            //Op code finding, marketplace orders and guild done, finding more as they come along :)
             if (fragment.Data[7] == 2 && fragment.Data[9] == 121)
                 Console.WriteLine("Marketplace"); 
             else if (fragment.Data[7] == 18 && fragment.Data[9] == 115)
@@ -182,27 +156,6 @@ namespace Albion
             foreach (byte b in ba)
                 hex.AppendFormat("{0:x2}", b);
             return hex.ToString();
-        }
-
-        static void PacketToJsonToDictionary()
-        {
-            string[] json = new Regex(@"(?<=[}])").Split(packetstring); //Get spliter without removing '}'
-            foreach (var x in json)
-            {
-                try
-                {
-                    if (x != "")
-                    {
-                        MarketplaceOrder order = JsonConvert.DeserializeObject<MarketplaceOrder>(x);
-                        Upload.MarketOrders.Add(order.Id, order);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message); //Important JSON.NET will not output error messages unless this is here
-                }
-            }
-            packetstring = "";
         }
     }
 }

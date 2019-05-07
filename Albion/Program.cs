@@ -42,6 +42,7 @@ namespace Albion
                 string ip = packet.Ethernet.IpV4.Source.ToString();
                 if (Regex.Match(ip, @"(185\.218\.131\..{2})").Success) //Use regex to match the ip's
                 {
+                    //Photon Layer parsing
                     PhotonLayer photon = new PhotonLayer();
                     int offset = 42;
                     photon.PeerID = packet.Buffer.ReadUShort(ref offset, Endianity.Big);
@@ -51,6 +52,7 @@ namespace Albion
                     photon.Challenge = packet.Buffer.ReadInt(offset, Endianity.Big);
                     offset += 4;
 
+                    //Get the amount of commands and then parse through them to send to the correct parser
                     PhotonCommand[] commands = new PhotonCommand[photon.CommandCount];
 
                     for (int i = 0; i < photon.CommandCount; i++)
@@ -67,10 +69,10 @@ namespace Albion
                         offset += 4;
 
                         command.Data = packet.Buffer.ReadBytes(ref offset, command.Length - 12);
-                        command.debug = Parser.ByteArrayToString(command.Data);
+                        command.debug = Parser.ByteArrayToString(command.Data); //Just string version of data (easy debug) REMOVE LATER
 
 
-                        
+                        //Get Command Type for parsing
                         if ((CommandTypes)(command.Type & 0xff) == CommandTypes.SendReliableType)
                         {
                             commands[i] = command;
@@ -80,9 +82,7 @@ namespace Albion
                         if((CommandTypes)(command.Type & 0xff) == CommandTypes.SendReliableFragmentType)
                         {
                             commands[i] = command;
-                            //string test = Parser.TrimNonAscii(System.Text.Encoding.UTF8.GetString(command.Data));
-                            //if (test.Contains("UnitPriceSilver"))
-                                Parser.ParseSendReliableFragmentType(command);
+                            Parser.ParseSendReliableFragmentType(command);
                             continue;
                         }
                         
@@ -90,10 +90,6 @@ namespace Albion
                         commands[i] = command;
                         
                     }
-
-                    //photonCommands.AddRange(commands);
-                    //packet.Buffer
-                    //Parser.PacketParse(packet.Buffer);
                 }
             } catch(Exception ex)
             {
@@ -182,6 +178,7 @@ namespace Albion
 
 public static class X
 {
+    //Extension Class to make this easier (because it was messy)
     public static int ReadInt(this byte[] ob, ref int offset, Endianity endianity)
     {
         int a = ob.ReadInt(offset, endianity);
