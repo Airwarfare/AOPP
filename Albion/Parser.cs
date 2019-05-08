@@ -43,6 +43,8 @@ namespace Albion
                     message.Data = command.Data.ReadBytes(ref offset, command.Data.Length - 6);
                     break;
             }
+            //if (System.Text.Encoding.UTF8.GetString(message.Data).Contains("Airwarfare"))
+                //System.Diagnostics.Debugger.Break();
              //Check if we changed zones, update the zone reference
             if ((message.Data[1] == 79 && message.Data[3] == 105))
             {
@@ -68,12 +70,12 @@ namespace Albion
                     !(User.Location.Type != ZoneType.OPENPVP_RED) ||
                     !(User.Location.Type != ZoneType.OPENPVP_T5RED) ||
                     !(User.Location.Type != ZoneType.OPENPVP_YELLOW))
-                {            
+                {           
                     //WARNING messy code below, still need to tidy up, still debuging a lot of this, but it is somehow working atm
                     int l = (int)message.Data.ReadByte(11);
                     string t = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(12, l));
-                
-                
+                    if (message.Data[11 + l + 2] != 98)
+                        return;
                     int goffset = 0;
                     for (int i = 11 + l; i < message.Data.Length; i++)
                     {
@@ -119,7 +121,9 @@ namespace Albion
                         MapLocation = User.Location.Name
                     };
 
-                    Upload.AddPing(p);
+
+                    //Later get players own guild and check that info
+                    Upload.UploadPing(p);
                 }
                 else
                     return;

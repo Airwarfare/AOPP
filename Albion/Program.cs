@@ -19,15 +19,6 @@ namespace Albion
         {
             valuePairs = JsonConvert.DeserializeObject<List<Cluster>>(File.ReadAllText(@"C:\Users\Jordan\source\repos\XMLParse\XMLParse\world.json")).ToDictionary(x => x.ID, x => x);
 
-            Task.Run(async () =>
-            {
-                while (true)
-                {
-                    Upload.UploadPings();
-                    await Task.Delay(1000);
-                }
-            });
-
 
             IList<LivePacketDevice> devices = LivePacketDevice.AllLocalMachine;
 

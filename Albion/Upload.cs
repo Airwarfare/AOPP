@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,29 +12,14 @@ namespace Albion
     static class Upload
     {
         static Dictionary<Int64, MarketplaceOrder> MarketOrders = new Dictionary<long, MarketplaceOrder>();
-        static List<Ping> pings = new List<Ping>();
         public static string APIURL = "https://localhost:5001/";
-        static HttpClient client = new HttpClient();
+        static RestClient client = new RestClient(APIURL);
 
-        public static void UploadPings()
+        public static void UploadPing(Ping p)
         {
-            client.BaseAddress = new Uri(APIURL);
-            pings.ForEach(async x =>
-            {
-
-                    
-                var response = await client.PostAsync("api/ping/", new StringContent(JsonConvert.SerializeObject(x), Encoding.UTF8, "application/json"));
-                if (response.IsSuccessStatusCode)
-                    lock (pings)
-                    {
-                        pings.Remove(x);
-                    }
-            });
-        }
-
-        public static void AddPing(Ping p)
-        {
-            pings.Add(p);
+            var request = new RestRequest("api/ping/", Method.POST);
+            request.AddJsonBody(JsonConvert.SerializeObject(p));
+            client.Execute(request);
         }
     }
 }
