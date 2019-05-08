@@ -70,4 +70,13 @@ namespace Albion
         ARENA_CRYSTAL,
         TUTORIAL
     }
+
+    public struct Ping
+    {
+        public string PlayerName { get; set; }
+        public string PlayerGuild { get; set; }
+        public string PlayerAlliance { get; set; }
+        public string MapLocation { get; set; }
+        public DateTime time { get; set; }
+    }
 }

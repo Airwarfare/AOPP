@@ -43,9 +43,8 @@ namespace Albion
                     message.Data = command.Data.ReadBytes(ref offset, command.Data.Length - 6);
                     break;
             }
-
              //Check if we changed zones, update the zone reference
-            if (message.Data[1] == 78 && message.Data[3] == 105)
+            if ((message.Data[1] == 79 && message.Data[3] == 105))
             {
                 string t = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(73, (int)message.Data.ReadByte(72)));
                 if (Program.valuePairs.ContainsKey(t))
@@ -113,6 +112,14 @@ namespace Albion
                         alliance = System.Text.Encoding.UTF8.GetString(message.Data.ReadBytes(aoffset + 4, alength));
                     }
                     Console.WriteLine("Player: " + t + ", Guild: " + guild + ", Alliance: " + alliance);
+                    Ping p = new Ping {
+                        PlayerName = t,
+                        PlayerGuild = guild,
+                        PlayerAlliance = alliance,
+                        MapLocation = User.Location.Name
+                    };
+
+                    Upload.AddPing(p);
                 }
                 else
                     return;

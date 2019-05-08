@@ -18,7 +18,17 @@ namespace Albion
         static void Main(string[] args)
         {
             valuePairs = JsonConvert.DeserializeObject<List<Cluster>>(File.ReadAllText(@"C:\Users\Jordan\source\repos\XMLParse\XMLParse\world.json")).ToDictionary(x => x.ID, x => x);
-            
+
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    Upload.UploadPings();
+                    await Task.Delay(1000);
+                }
+            });
+
+
             IList<LivePacketDevice> devices = LivePacketDevice.AllLocalMachine;
 
             if(devices.Count == 0)
@@ -70,7 +80,6 @@ namespace Albion
 
                         command.Data = packet.Buffer.ReadBytes(ref offset, command.Length - 12);
                         command.debug = Parser.ByteArrayToString(command.Data); //Just string version of data (easy debug) REMOVE LATER
-
 
                         //Get Command Type for parsing
                         if ((CommandTypes)(command.Type & 0xff) == CommandTypes.SendReliableType)
